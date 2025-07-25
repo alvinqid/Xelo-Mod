@@ -1,4 +1,5 @@
 use crate::ResourceLocation;
+use crate::config::is_no_hurt_cam_enabled;
 use libc::{off64_t, off_t};
 use materialbin::{CompiledMaterialDefinition, MinecraftVersion};
 use ndk::asset::Asset;
