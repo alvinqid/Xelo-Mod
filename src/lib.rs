@@ -6,6 +6,8 @@ use std::{
     str::SplitWhitespace,
     sync::{atomic::AtomicPtr, OnceLock},
 };
+mod config;
+use config::{init_config, is_no_hurt_cam_enabled};
 mod aasset;
 mod plthook;
 use crate::plthook::replace_plt_functions;
@@ -56,6 +58,7 @@ pub fn setup_logging() {
 #[ctor::ctor]
 fn main() {
     setup_logging();
+    init_config();
     log::info!("Starting");
     let mcmap = find_minecraft_library_manually()
         .expect("Cannot find libminecraftpe.so in memory maps - device not supported");
