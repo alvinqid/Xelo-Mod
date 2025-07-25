@@ -113,24 +113,24 @@ pub(crate) unsafe fn open(
         return aasset;
     }
     
-    if os_filename == "first_person.json" {
-    log::info!("Intercepting first_person.json with custom content");
+if os_filename == "first_person.json" && is_no_hurt_cam_enabled() {
+    log::info!("Intercepting first_person.json with custom content (nohurtcam enabled)");
     let buffer = CUSTOM_FIRST_PERSON_JSON.as_bytes().to_vec();
     let mut wanted_lock = WANTED_ASSETS.lock().unwrap();
     wanted_lock.insert(AAssetPtr(aasset), Cursor::new(buffer));
     return aasset;
 }
 
-if os_filename == "third_person.json" {
-    log::info!("Intercepting third_person.json with custom content");
+if os_filename == "third_person.json" && is_no_hurt_cam_enabled() {
+    log::info!("Intercepting third_person.json with custom content (nohurtcam enabled)");
     let buffer = CUSTOM_THIRD_PERSON_JSON.as_bytes().to_vec();
     let mut wanted_lock = WANTED_ASSETS.lock().unwrap();
     wanted_lock.insert(AAssetPtr(aasset), Cursor::new(buffer));
     return aasset;
 }
 
-if os_filename == "third_person_front.json" {
-    log::info!("Intercepting third_person_front.json with custom content");
+if os_filename == "third_person_front.json" && is_no_hurt_cam_enabled() {
+    log::info!("Intercepting third_person_front.json with custom content (nohurtcam enabled)");
     let buffer = CUSTOM_THIRD_PERSON_FRONT_JSON.as_bytes().to_vec();
     let mut wanted_lock = WANTED_ASSETS.lock().unwrap();
     wanted_lock.insert(AAssetPtr(aasset), Cursor::new(buffer));
