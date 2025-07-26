@@ -7,7 +7,7 @@ use std::{
     sync::{atomic::AtomicPtr, OnceLock},
 };
 mod config;
-use config::{init_config, is_no_hurt_cam_enabled};
+use config::init_config;
 mod aasset;
 mod plthook;
 use crate::plthook::replace_plt_functions;
