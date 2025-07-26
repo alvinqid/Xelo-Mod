@@ -26,8 +26,8 @@ impl Default for ModConfig {
 static CONFIG: OnceLock<ModConfig> = OnceLock::new();
 
 // Config file path
-const CONFIG_DIR: &str = "/storage/emulated/0/origin_mods";
-const CONFIG_FILE: &str = "/storage/emulated/0/origin_mods/config.json";
+const CONFIG_DIR: &str = "/storage/emulated/0/Android/data/com.origin.launcher/files/origin_mods";
+const CONFIG_FILE: &str = "/storage/emulated/0/Android/data/com.origin.launcher/files/origin_mods/config.json";
 
 pub fn init_config() {
     let config = load_or_create_config();
