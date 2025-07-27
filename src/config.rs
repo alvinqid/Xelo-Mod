@@ -15,6 +15,12 @@ pub struct ModConfig {
     #[serde(rename = "Nofog")]
     pub no_fog: bool,
     
+    #[serde(rename = "particles_disabler")]
+    pub particles_disabler: bool,
+    
+    #[serde(rename = "java_clouds")]
+    pub java_clouds: bool,
+    
     // You can add more fields as needed
     // #[serde(rename = "CustomField")]
     // pub custom_field: bool,
@@ -25,6 +31,8 @@ impl Default for ModConfig {
         Self {
             no_hurt_cam: true,
             no_fog: false,
+            particles_disabler: false,
+            java_clouds: false,
             // custom_field: false,
         }
     }
@@ -101,6 +109,14 @@ pub fn is_no_hurt_cam_enabled() -> bool {
 
 pub fn is_no_fog_enabled() -> bool {
     get_config().no_fog
+}
+
+pub fn is_particles_disabler_enabled() -> bool {
+    get_config().particles_disabler
+}
+
+pub fn is_java_clouds_enabled() -> bool {
+    get_config().java_clouds
 }
 
 // You can add more helper functions for other config values
