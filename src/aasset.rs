@@ -105,7 +105,7 @@ fn get_no_fog_material_data(filename: &str) -> Option<&'static [u8]> {
     }
 }
 
-fn get_java_cunemap_material_data(filename: &str) -> Option<&'static [u8]> {
+fn get_java_cubemap_material_data(filename: &str) -> Option<&'static [u8]> {
     if !is_java_cubemap_enabled() {
         return None;
     }
