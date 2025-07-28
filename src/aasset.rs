@@ -1,5 +1,5 @@
 use crate::ResourceLocation;
-use crate::config::{is_no_hurt_cam_enabled, is_no_fog_enabled, is_java_cubemap_enabled, is_particles_disabler_enabled, is_java_clouds_enabled};
+use crate::config::{is_no_hurt_cam_enabled, is_no_fog_enabled, is_java_cubemap_enabled, is_particles_disabler_enabled, is_java_clouds_enabled, is_classic_skins_enabled};
 use libc::{off64_t, off_t};
 use materialbin::{CompiledMaterialDefinition, MinecraftVersion};
 use ndk::asset::Asset;
@@ -35,6 +35,8 @@ const RENDER_CHUNK_MATERIAL_BIN: &[u8] = include_bytes!("no_fog_materials/Render
 
 // Custom splash text JSON content
 const CUSTOM_SPLASHES_JSON: &str = r#"{"splashes":["Origin Client","Origin > any other client","The Best Client!!","BlueCat","Origin is so much better","Origin Optimizes like no other client","Make Sure to star our repository:https://github.com/Origin-Client/Origin","Contributions open!","Made by the community, for the community","Yami is goated!!"]}"#;
+
+const CUSTOM_SKINS_JSON: &str = r#"{"skins":[{"localization_name":"Steve","geometry":"geometry.humanoid.custom","texture":"steve.png","type":"free"},{"localization_name":"Alex","geometry":"geometry.humanoid.customSlim","texture":"alex.png","type":"free"}],"serialize_name":"Standard","localization_name":"Standard"}"#;
 
 const CUSTOM_FIRST_PERSON_JSON: &str = r#"{"format_version":"1.18.10","minecraft:camera_entity":{"description":{"identifier":"minecraft:first_person"},"components":{"minecraft:camera":{"field_of_view":66,"near_clipping_plane":0.025,"far_clipping_plane":2500},"minecraft:camera_first_person":{},"minecraft:camera_render_first_person_objects":{},"minecraft:camera_attach_to_player":{},"minecraft:camera_offset":{"view":[0,0],"entity":[0,0,0]},"minecraft:camera_direct_look":{"pitch_min":-89.9,"pitch_max":89.9},"minecraft:camera_perspective_option":{"view_mode":"first_person"},"minecraft:update_player_from_camera":{"look_mode":"along_camera"},"minecraft:extend_player_rendering":{},"minecraft:camera_player_sleep_vignette":{},"minecraft:vr_comfort_move":{},"minecraft:default_input_camera":{},"minecraft:gameplay_affects_fov":{},"minecraft:allow_inside_block":{}}}}"#;
 const CUSTOM_THIRD_PERSON_JSON: &str = r#"{"format_version":"1.18.10","minecraft:camera_entity":{"description":{"identifier":"minecraft:third_person"},"components":{"minecraft:camera":{"field_of_view":66,"near_clipping_plane":0.025,"far_clipping_plane":2500},"minecraft:camera_third_person":{},"minecraft:camera_render_player_model":{},"minecraft:camera_attach_to_player":{},"minecraft:camera_offset":{"view":[0,0],"entity":[0,2,5]},"minecraft:camera_look_at_player":{},"minecraft:camera_orbit":{"azimuth_smoothing_spring":0,"polar_angle_smoothing_spring":0,"distance_smoothing_spring":0,"polar_angle_min":0.1,"polar_angle_max":179.9,"radius":4},"minecraft:camera_avoidance":{"relax_distance_smoothing_spring":0,"distance_constraint_min":0.25},"minecraft:camera_perspective_option":{"view_mode":"third_person"},"minecraft:update_player_from_camera":{"look_mode":"along_camera"},"minecraft:camera_player_sleep_vignette":{},"minecraft:gameplay_affects_fov":{},"minecraft:allow_inside_block":{},"minecraft:extend_player_rendering":{}}}}"#;
@@ -105,7 +107,7 @@ fn get_no_fog_material_data(filename: &str) -> Option<&'static [u8]> {
     }
 }
 
-fn get_java_cubemap_material_data(filename: &str) -> Option<&'static [u8]> {
+fn get_java_cunemap_material_data(filename: &str) -> Option<&'static [u8]> {
     if !is_java_cubemap_enabled() {
         return None;
     }
@@ -293,6 +295,21 @@ pub(crate) unsafe fn open(
             if os_filename == "third_person_front.json" {
                 log::info!("Intercepting cameras/third_person_front.json with custom content (nohurtcam enabled)");
                 let buffer = CUSTOM_THIRD_PERSON_FRONT_JSON.as_bytes().to_vec();
+                let mut wanted_lock = WANTED_ASSETS.lock().unwrap();
+                wanted_lock.insert(AAssetPtr(aasset), Cursor::new(buffer));
+                return aasset;
+            }
+        }
+    }
+    
+    if is_classic_skins_enabled() {
+        // Check if the path contains cameras folder and ends with the specific JSON files
+        let path_str = c_path.to_string_lossy();
+        
+        if path_str.contains("vanilla/") {
+            if os_filename == "skins.json" {
+                log::info!("Intercepting vanilla/skins.json with custom content (classic skins enabled)");
+                let buffer = CUSTOM_SKINS_JSON.as_bytes().to_vec();
                 let mut wanted_lock = WANTED_ASSETS.lock().unwrap();
                 wanted_lock.insert(AAssetPtr(aasset), Cursor::new(buffer));
                 return aasset;
