@@ -24,6 +24,9 @@ pub struct ModConfig {
     #[serde(rename = "java_cubemap")]
     pub java_cubemap: bool,
     
+    #[serde(rename = "classic_skins")]
+    pub classic_skins: bool,
+    
     // You can add more fields as needed
     // #[serde(rename = "CustomField")]
     // pub custom_field: bool,
@@ -37,6 +40,7 @@ impl Default for ModConfig {
             particles_disabler: false,
             java_clouds: false,
             java_cubemap: false,
+            classic_skins: false,
             // custom_field: false,
         }
     }
@@ -125,6 +129,10 @@ pub fn is_java_clouds_enabled() -> bool {
 
 pub fn is_java_cubemap_enabled() -> bool {
     get_config().java_cubemap
+}
+
+pub fn is_classic_skins_enabled() -> bool {
+    get_config().classic_skins
 }
 
 // You can add more helper functions for other config values
