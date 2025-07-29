@@ -1,5 +1,5 @@
 use crate::ResourceLocation;
-use crate::config::{is_no_hurt_cam_enabled, is_no_fog_enabled, is_java_cubemap_enabled, is_particles_disabler_enabled, is_java_clouds_enabled, is_classic_skins_enabled};
+use crate::config::{is_no_hurt_cam_enabled, is_no_fog_enabled, is_java_cubemap_enabled, is_particles_disabler_enabled, is_java_clouds_enabled, is_classic_skins_enabled, is_3d_skin_layer_enabled};
 use libc::{off64_t, off_t};
 use materialbin::{CompiledMaterialDefinition, MinecraftVersion};
 use ndk::asset::Asset;
@@ -207,6 +207,27 @@ fn is_classic_skins_json_file(c_path: &Path) -> bool {
     is_skin_file_path(c_path, "skins.json")
 }
 
+fn is_persona_file_to_block(c_path: &Path) -> bool {
+    if !is_classic_skins_enabled() {
+        return false;
+    }
+    
+    let path_str = c_path.to_string_lossy();
+    
+    let blocked_personas = [
+        "persona/08_Kai_Dcast.json",
+        "persona/07_Zuri_Dcast.json", 
+        "persona/06_Efe_Dcast.json",
+        "persona/05_Makena_Dcast.json",
+        "persona/04_Sunny_Dcast.json",
+        "persona/03_Ari_Dcast.json",
+        "persona/02_ Noor_Dcast.json", 
+    ];
+    
+    blocked_personas.iter().any(|persona_path| {
+        path_str.contains(persona_path) || path_str.ends_with(persona_path)
+    })
+}
 pub(crate) unsafe fn open(
     man: *mut AAssetManager,
     fname: *const libc::c_char,
@@ -223,6 +244,14 @@ pub(crate) unsafe fn open(
         return aasset;
     };
 
+    if is_persona_file_to_block(c_path) {
+        log::info!("Blocking persona file due to classic_skins enabled: {}", c_path.display());
+        if !aasset.is_null() {
+            ndk_sys::AAsset_close(aasset);
+        }
+        return std::ptr::null_mut();
+    }
+    
     if os_filename == "splashes.json" {
         log::info!("Intercepting splashes.json with custom content");
         let buffer = CUSTOM_SPLASHES_JSON.as_bytes().to_vec();
