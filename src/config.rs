@@ -27,8 +27,8 @@ pub struct ModConfig {
     #[serde(rename = "classic_skins")]
     pub classic_skins: bool,
     
-    #[serde(rename = "3d_skin_layer")]
-    pub 3d_skin_layer: bool,
+    #[serde(rename = "threed_skin_layer")]
+    pub threed_skin_layer: bool,
     
     // You can add more fields as needed
     // #[serde(rename = "CustomField")]
@@ -44,7 +44,7 @@ impl Default for ModConfig {
             java_clouds: false,
             java_cubemap: false,
             classic_skins: false,
-            3d_skin_layer: false,
+            threed_skin_layer: false,
             // custom_field: false,
         }
     }
@@ -139,8 +139,8 @@ pub fn is_classic_skins_enabled() -> bool {
     get_config().classic_skins
 }
 
-pub fn is_3d_skin_layer_enabled() -> bool {
-    get_config().3d_skin_layer
+pub fn is_threed_skin_layer_enabled() -> bool {
+    get_config().threed_skin_layer
 }
 
 // You can add more helper functions for other config values
