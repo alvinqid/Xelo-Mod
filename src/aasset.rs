@@ -385,7 +385,8 @@ pub(crate) unsafe fn open(
         }
     }
     
-        if !is_cape_physics_enabled() {
+fn is_cape_animation_file(c_path: &Path) -> bool {
+    if !is_cape_physics_enabled() {
         return false;
     }
     
