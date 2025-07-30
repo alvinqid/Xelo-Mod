@@ -1,5 +1,5 @@
 use crate::ResourceLocation;
-use crate::config::{is_no_hurt_cam_enabled, is_no_fog_enabled, is_java_cubemap_enabled, is_particles_disabler_enabled, is_java_clouds_enabled, is_classic_skins_enabled, is_threed_skin_layer_enabled};
+use crate::config::{is_no_hurt_cam_enabled, is_no_fog_enabled, is_java_cubemap_enabled, is_particles_disabler_enabled, is_java_clouds_enabled, is_classic_skins_enabled, is_threed_skin_layer_enabled, is_cape_physics_enabled};
 use libc::{off64_t, off_t};
 use materialbin::{CompiledMaterialDefinition, MinecraftVersion};
 use ndk::asset::Asset;
@@ -30,7 +30,11 @@ const RENDER_CHUNK_MATERIAL_BIN: &[u8] = include_bytes!("no_fog_materials/Render
 
 const CUSTOM_SPLASHES_JSON: &str = r#"{"splashes":["Origin Client","Origin > any other client","The Best Client!!","BlueCat","Origin is so much better","Origin Optimizes like no other client","Make Sure to star our repository:https://github.com/Origin-Client/Origin","Contributions open!","Made by the community, for the community","Yami is goated!!"]}"#;
 
+const CUSTOM_CAPE_GEOMETRY_JSON: &str = r#"{"format_version":"1.12.0","minecraft:geometry":[{"description":{"identifier":"geometry.cape","texture_width":64,"texture_height":32,"visible_bounds_width":2,"visible_bounds_height":3.5,"visible_bounds_offset":[0,1.25,0]},"bones":[{"name":"root","pivot":[0,0,0]},{"name":"waist","parent":"root","pivot":[0,12,0]},{"name":"body","parent":"waist","pivot":[0,24,0]},{"name":"cape","parent":"body","pivot":[0,24,2],"rotation":[0,180,0]},{"name":"part1","parent":"cape","pivot":[0,24,2],"cubes":[{"origin":[-5,23,1],"size":[10,1,1],"uv":{"north":{"uv":[1,1],"uv_size":[10,1]},"east":{"uv":[0,1],"uv_size":[1,1]},"south":{"uv":[12,1],"uv_size":[10,1]},"west":{"uv":[11,1],"uv_size":[1,1]},"up":{"uv":[1,1],"uv_size":[10,-1]}}}]},{"name":"part2","parent":"part1","pivot":[0,23,1],"cubes":[{"origin":[-5,22,1],"size":[10,1.5,1],"uv":{"north":{"uv":[1,1.5],"uv_size":[10,1.5]},"east":{"uv":[0,1.5],"uv_size":[1,1.5]},"south":{"uv":[12,1.5],"uv_size":[10,1.5]},"west":{"uv":[11,1.5],"uv_size":[1,1.5]}}}]},{"name":"part3","parent":"part2","pivot":[0,22,1],"cubes":[{"origin":[-5,21,1],"size":[10,1.5,1],"uv":{"north":{"uv":[1,2.5],"uv_size":[10,1.5]},"east":{"uv":[0,2.5],"uv_size":[1,1.5]},"south":{"uv":[12,2.5],"uv_size":[10,1.5]},"west":{"uv":[11,2.5],"uv_size":[1,1.5]}}}]},{"name":"part4","parent":"part3","pivot":[0,21,1],"cubes":[{"origin":[-5,20,1],"size":[10,1.5,1],"uv":{"north":{"uv":[1,3.5],"uv_size":[10,1.5]},"east":{"uv":[0,3.5],"uv_size":[1,1.5]},"south":{"uv":[12,3.5],"uv_size":[10,1.5]},"west":{"uv":[11,3.5],"uv_size":[1,1.5]}}}]},{"name":"part5","parent":"part4","pivot":[0,20,1],"cubes":[{"origin":[-5,19,1],"size":[10,1.5,1],"uv":{"north":{"uv":[1,4.5],"uv_size":[10,1.5]},"east":{"uv":[0,4.5],"uv_size":[1,1.5]},"south":{"uv":[12,4.5],"uv_size":[10,1.5]},"west":{"uv":[11,4.5],"uv_size":[1,1.5]}}}]},{"name":"part6","parent":"part5","pivot":[0,19,1],"cubes":[{"origin":[-5,18,1],"size":[10,1.5,1],"uv":{"north":{"uv":[1,5.5],"uv_size":[10,1.5]},"east":{"uv":[0,5.5],"uv_size":[1,1.5]},"south":{"uv":[12,5.5],"uv_size":[10,1.5]},"west":{"uv":[11,5.5],"uv_size":[1,1.5]}}}]},{"name":"part7","parent":"part6","pivot":[0,18,1],"cubes":[{"origin":[-5,17,1],"size":[10,1.5,1],"uv":{"north":{"uv":[1,6.5],"uv_size":[10,1.5]},"east":{"uv":[0,6.5],"uv_size":[1,1.5]},"south":{"uv":[12,6.5],"uv_size":[10,1.5]},"west":{"uv":[11,6.5],"uv_size":[1,1.5]}}}]},{"name":"part8","parent":"part7","pivot":[0,17,1],"cubes":[{"origin":[-5,16,1],"size":[10,1.5,1],"uv":{"north":{"uv":[1,7.5],"uv_size":[10,1.5]},"east":{"uv":[0,7.5],"uv_size":[1,1.5]},"south":{"uv":[12,7.5],"uv_size":[10,1.5]},"west":{"uv":[11,7.5],"uv_size":[1,1.5]}}}]},{"name":"part9","parent":"part8","pivot":[0,16,1],"cubes":[{"origin":[-5,15,1],"size":[10,1.5,1],"uv":{"north":{"uv":[1,8.5],"uv_size":[10,1.5]},"east":{"uv":[0,8.5],"uv_size":[1,1.5]},"south":{"uv":[12,8.5],"uv_size":[10,1.5]},"west":{"uv":[11,8.5],"uv_size":[1,1.5]}}}]},{"name":"part10","parent":"part9","pivot":[0,15,1],"cubes":[{"origin":[-5,14,1],"size":[10,1.5,1],"uv":{"north":{"uv":[1,9.5],"uv_size":[10,1.5]},"east":{"uv":[0,9.5],"uv_size":[1,1.5]},"south":{"uv":[12,9.5],"uv_size":[10,1.5]},"west":{"uv":[11,9.5],"uv_size":[1,1.5]}}}]},{"name":"part11","parent":"part10","pivot":[0,14,1],"cubes":[{"origin":[-5,13,1],"size":[10,1.5,1],"uv":{"north":{"uv":[1,10.5],"uv_size":[10,1.5]},"east":{"uv":[0,10.5],"uv_size":[1,1.5]},"south":{"uv":[12,10.5],"uv_size":[10,1.5]},"west":{"uv":[11,10.5],"uv_size":[1,1.5]}}}]},{"name":"part12","parent":"part11","pivot":[0,13,1],"cubes":[{"origin":[-5,12,1],"size":[10,1.5,1],"uv":{"north":{"uv":[1,11.5],"uv_size":[10,1.5]},"east":{"uv":[0,11.5],"uv_size":[1,1.5]},"south":{"uv":[12,11.5],"uv_size":[10,1.5]},"west":{"uv":[11,11.5],"uv_size":[1,1.5]}}}]},{"name":"part13","parent":"part12","pivot":[0,12,1],"cubes":[{"origin":[-5,11,1],"size":[10,1.5,1],"uv":{"north":{"uv":[1,12.5],"uv_size":[10,1.5]},"east":{"uv":[0,12.5],"uv_size":[1,1.5]},"south":{"uv":[12,12.5],"uv_size":[10,1.5]},"west":{"uv":[11,12.5],"uv_size":[1,1.5]}}}]},{"name":"part14","parent":"part13","pivot":[0,11,1],"cubes":[{"origin":[-5,10,1],"size":[10,1.5,1],"uv":{"north":{"uv":[1,13.5],"uv_size":[10,1.5]},"east":{"uv":[0,13.5],"uv_size":[1,1.5]},"south":{"uv":[12,13.5],"uv_size":[10,1.5]},"west":{"uv":[11,13.5],"uv_size":[1,1.5]}}}]},{"name":"part15","parent":"part14","pivot":[0,10,1],"cubes":[{"origin":[-5,9,1],"size":[10,1.5,1],"uv":{"north":{"uv":[1,14.5],"uv_size":[10,1.5]},"east":{"uv":[0,14.5],"uv_size":[1,1.5]},"south":{"uv":[12,14.5],"uv_size":[10,1.5]},"west":{"uv":[11,14.5],"uv_size":[1,1.5]}}}]},{"name":"part16","parent":"part15","pivot":[0,9,1],"cubes":[{"origin":[-5,8,1],"size":[10,1.5,1],"uv":{"north":{"uv":[1,15.5],"uv_size":[10,1.5]},"east":{"uv":[0,15.5],"uv_size":[1,1.5]},"south":{"uv":[12,15.5],"uv_size":[10,1.5]},"west":{"uv":[11,15.5],"uv_size":[1,1.5]},"down":{"uv":[11,1],"uv_size":[10,-1]}}}]}]}]}"#;
+
 const CUSTOM_SKINS_JSON: &str = r#"{"skins":[{"localization_name":"Steve","geometry":"geometry.humanoid.custom","texture":"steve.png","type":"free"},{"localization_name":"Alex","geometry":"geometry.humanoid.customSlim","texture":"alex.png","type":"free"}],"serialize_name":"Standard","localization_name":"Standard"}"#;
+
+const CUSTOM_CAPE_ANIMATION_JSON: &str = r#"{"format_version":"1.8.0","animations":{"animation.player.cape":{"loop":true,"bones":{"cape":{"rotation":["math.clamp(math.lerp(0, -110, query.cape_flap_amount) - (13 * query.modified_move_speed), -70, 0)","query.modified_move_speed * math.pow(math.sin(query.body_y_rotation - query.head_y_rotation(0)), 3) * 55",0],"position":[0,0,"query.get_root_locator_offset('armor_offset.default_neck', 1)"]},"part1":{"rotation":["math.clamp(query.cape_flap_amount, 0, 0.5) * (math.cos(query.modified_distance_moved * 18) * 16)",0,"0"]},"part2":{"rotation":["math.clamp(query.cape_flap_amount, 0, 0.5) * math.cos(22 - query.modified_distance_moved * 18) * 13",0,0],"scale":1},"part3":{"rotation":["math.clamp(query.cape_flap_amount, 0, 0.5) * math.cos(50 - query.modified_distance_moved * 18) * 13",0,0]},"part4":{"rotation":["math.clamp(query.cape_flap_amount, 0, 0.5) * math.cos(76 - query.modified_distance_moved * 18) * 13",0,0]},"part5":{"rotation":["math.clamp(query.cape_flap_amount, 0, 0.5) * math.cos(100 - query.modified_distance_moved * 18) * 13",0,0]},"part6":{"rotation":["math.clamp(query.cape_flap_amount, 0, 0.5) * math.cos(122 - query.modified_distance_moved * 18) * 13",0,0]},"part7":{"rotation":["math.clamp(query.cape_flap_amount, 0, 0.5) * math.cos(142 - query.modified_distance_moved * 18) * 13",0,0]},"part8":{"rotation":["math.clamp(query.cape_flap_amount, 0, 0.5) * math.cos(160 - query.modified_distance_moved * 18) * 13",0,0]},"part9":{"rotation":["math.clamp(query.cape_flap_amount, 0, 0.5) * math.cos(176 - query.modified_distance_moved * 18) * 13",0,0]},"part10":{"rotation":["math.clamp(query.cape_flap_amount, 0, 0.5) * math.cos(190 - query.modified_distance_moved * 18) * 13",0,0]},"part11":{"rotation":["math.clamp(query.cape_flap_amount, 0, 0.5) * math.cos(202 - query.modified_distance_moved * 18) * 13",0,0]},"part12":{"rotation":["math.clamp(query.cape_flap_amount, 0, 0.5) * math.cos(212 - query.modified_distance_moved * 18) * 13",0,0]},"part13":{"rotation":["math.clamp(query.cape_flap_amount, 0, 0.5) * math.cos(220 - query.modified_distance_moved * 18) * 13",0,0]},"part14":{"rotation":["math.clamp(query.cape_flap_amount, 0, 0.5) * math.cos(226 - query.modified_distance_moved * 18) * 13",0,0]},"part15":{"rotation":["math.clamp(query.cape_flap_amount, 0, 0.5) * math.cos(230 - query.modified_distance_moved * 18) * 13",0,0]},"part16":{"rotation":["math.clamp(query.cape_flap_amount, 0, 0.5) * math.cos(232 - query.modified_distance_moved * 18) * 13",0,0]},"shoulders":{"rotation":[0,"query.modified_move_speed * math.pow(math.sin(query.body_y_rotation - query.head_y_rotation(0)), 3) * 60",0]}}}}}"#;
 
 const CUSTOM_FIRST_PERSON_JSON: &str = r#"{"format_version":"1.18.10","minecraft:camera_entity":{"description":{"identifier":"minecraft:first_person"},"components":{"minecraft:camera":{"field_of_view":66,"near_clipping_plane":0.025,"far_clipping_plane":2500},"minecraft:camera_first_person":{},"minecraft:camera_render_first_person_objects":{},"minecraft:camera_attach_to_player":{},"minecraft:camera_offset":{"view":[0,0],"entity":[0,0,0]},"minecraft:camera_direct_look":{"pitch_min":-89.9,"pitch_max":89.9},"minecraft:camera_perspective_option":{"view_mode":"first_person"},"minecraft:update_player_from_camera":{"look_mode":"along_camera"},"minecraft:extend_player_rendering":{},"minecraft:camera_player_sleep_vignette":{},"minecraft:vr_comfort_move":{},"minecraft:default_input_camera":{},"minecraft:gameplay_affects_fov":{},"minecraft:allow_inside_block":{}}}}"#;
 const CUSTOM_THIRD_PERSON_JSON: &str = r#"{"format_version":"1.18.10","minecraft:camera_entity":{"description":{"identifier":"minecraft:third_person"},"components":{"minecraft:camera":{"field_of_view":66,"near_clipping_plane":0.025,"far_clipping_plane":2500},"minecraft:camera_third_person":{},"minecraft:camera_render_player_model":{},"minecraft:camera_attach_to_player":{},"minecraft:camera_offset":{"view":[0,0],"entity":[0,2,5]},"minecraft:camera_look_at_player":{},"minecraft:camera_orbit":{"azimuth_smoothing_spring":0,"polar_angle_smoothing_spring":0,"distance_smoothing_spring":0,"polar_angle_min":0.1,"polar_angle_max":179.9,"radius":4},"minecraft:camera_avoidance":{"relax_distance_smoothing_spring":0,"distance_constraint_min":0.25},"minecraft:camera_perspective_option":{"view_mode":"third_person"},"minecraft:update_player_from_camera":{"look_mode":"along_camera"},"minecraft:camera_player_sleep_vignette":{},"minecraft:gameplay_affects_fov":{},"minecraft:allow_inside_block":{},"minecraft:extend_player_rendering":{}}}}"#;
@@ -267,6 +271,22 @@ pub(crate) unsafe fn open(
         wanted_lock.insert(AAssetPtr(aasset), Cursor::new(buffer));
         return aasset;
     }
+    
+    if is_cape_animation_file(c_path) {
+        log::info!("Intercepting cape animation file with custom cape physics: {}", c_path.display());
+        let buffer = CUSTOM_CAPE_ANIMATION_JSON.as_bytes().to_vec();
+        let mut wanted_lock = WANTED_ASSETS.lock().unwrap();
+        wanted_lock.insert(AAssetPtr(aasset), Cursor::new(buffer));
+        return aasset;
+    }
+    
+    if is_cape_geometry_file(c_path) {
+        log::info!("Intercepting cape geometry file with custom cape physics: {}", c_path.display());
+        let buffer = CUSTOM_CAPE_GEOMETRY_JSON.as_bytes().to_vec();
+        let mut wanted_lock = WANTED_ASSETS.lock().unwrap();
+        wanted_lock.insert(AAssetPtr(aasset), Cursor::new(buffer));
+        return aasset;
+    }
 
     if is_particle_json_file(c_path) {
         log::info!("Intercepting particle JSON file: {}", c_path.display());
@@ -364,6 +384,45 @@ pub(crate) unsafe fn open(
             }
         }
     }
+    
+        if !is_cape_physics_enabled() {
+        return false;
+    }
+    
+    let path_str = c_path.to_string_lossy();
+    
+    // Check for cape animation file in various possible locations
+    let cape_animation_paths = [
+        "vanilla_1.20.50/animations/cape.animation.json",
+        "animations/cape.animation.json",
+        "resource_packs/vanilla_1.20.50/animations/cape.animation.json",
+        "assets/resource_packs/vanilla_1.20.50/animations/cape.animation.json",
+    ];
+    
+    cape_animation_paths.iter().any(|path| {
+        path_str.contains(path) || path_str.ends_with(path)
+    })
+}
+
+fn is_cape_geometry_file(c_path: &Path) -> bool {
+    if !is_cape_physics_enabled() {
+        return false;
+    }
+    
+    let path_str = c_path.to_string_lossy();
+    
+    // Check for cape geometry file in various possible locations
+    let cape_geometry_paths = [
+        "vanilla_1.20.50/models/entity/cape.geo.json",
+        "models/entity/cape.geo.json",
+        "resource_packs/vanilla_1.20.50/models/entity/cape.geo.json",
+        "assets/resource_packs/vanilla_1.20.50/models/entity/cape.geo.json",
+    ];
+    
+    cape_geometry_paths.iter().any(|path| {
+        path_str.contains(path) || path_str.ends_with(path)
+    })
+}
 
     let filename_str = os_filename.to_string_lossy();
     if let Some(no_fog_data) = get_no_fog_material_data(&filename_str) {
