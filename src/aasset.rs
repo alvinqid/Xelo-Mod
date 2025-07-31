@@ -219,7 +219,6 @@ fn is_persona_file_to_block(c_path: &Path) -> bool {
     })
 }
 
-// Cape physics helper functions - MOVED OUTSIDE of open() function
 fn is_cape_animation_file(c_path: &Path) -> bool {
     if !is_cape_physics_enabled() {
         return false;
@@ -227,7 +226,7 @@ fn is_cape_animation_file(c_path: &Path) -> bool {
     
     let path_str = c_path.to_string_lossy();
     
-    // Check for cape animation file in various possible locations
+    
     let cape_animation_paths = [
         "vanilla_1.20.50/animations/cape.animation.json",
     ];
@@ -244,7 +243,7 @@ fn is_cape_geometry_file(c_path: &Path) -> bool {
     
     let path_str = c_path.to_string_lossy();
     
-    // Check for cape geometry file in various possible locations
+    
     let cape_geometry_paths = [
         "vanilla_1.20.50/models/entity/cape.geo.json",
     ];
@@ -261,7 +260,6 @@ fn is_cape_content_file(c_path: &Path) -> bool {
     
     let path_str = c_path.to_string_lossy();
     
-    // Check for cape geometry file in various possible locations
     let cape_geometry_paths = [
         "vanilla_1.20.50/contents.json",
     ];
