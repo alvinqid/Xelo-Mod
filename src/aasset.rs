@@ -227,15 +227,6 @@ fn is_cape_animation_file(c_path: &Path) -> bool {
     // Check for cape animation file in various possible locations
     let cape_animation_paths = [
         "vanilla_1.20.50/animations/cape.animation.json",
-        "animations/cape.animation.json",
-        "resource_packs/vanilla_1.20.50/animations/cape.animation.json",
-        "assets/resource_packs/vanilla_1.20.50/animations/cape.animation.json",
-        "models/entity/cape.animation.json",
-        "entity/cape.animation.json",
-        "cape.animation.json",
-        "/animations/cape.animation.json",
-        "/models/entity/cape.animation.json",
-        "/entity/cape.animation.json",
     ];
     
     cape_animation_paths.iter().any(|path| {
@@ -253,15 +244,6 @@ fn is_cape_geometry_file(c_path: &Path) -> bool {
     // Check for cape geometry file in various possible locations
     let cape_geometry_paths = [
         "vanilla_1.20.50/models/entity/cape.geo.json",
-        "models/entity/cape.geo.json",
-        "resource_packs/vanilla_1.20.50/models/entity/cape.geo.json",
-        "assets/resource_packs/vanilla_1.20.50/models/entity/cape.geo.json",
-        "entity/cape.geo.json",
-        "cape.geo.json",
-        "/models/entity/cape.geo.json",
-        "/entity/cape.geo.json",
-        "geometry/cape.geo.json",
-        "/geometry/cape.geo.json",
     ];
     
     cape_geometry_paths.iter().any(|path| {
