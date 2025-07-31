@@ -115,52 +115,21 @@ fn get_java_cubemap_material_data(filename: &str) -> Option<&'static [u8]> {
     }
 }
 
-fn is_particle_json_file(c_path: &Path) -> bool {
+// Fixed particles disabler - now blocks entire particles folder
+fn is_particles_folder_to_block(c_path: &Path) -> bool {
     if !is_particles_disabler_enabled() {
         return false;
     }
     
     let path_str = c_path.to_string_lossy();
     
-    path_str.contains("particles/") && path_str.ends_with(".json")
+    // Block any file in particles folder
+    path_str.contains("particles/") || 
+    path_str.contains("/particles/") ||
+    path_str.starts_with("particles/")
 }
 
-fn process_particle_json(original_data: &[u8]) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
-    let json_str = std::str::from_utf8(original_data)?;
-    
-    let mut json_value: serde_json::Value = serde_json::from_str(json_str)?;
-    
-    fn process_json_recursive(value: &mut serde_json::Value) {
-        match value {
-            serde_json::Value::Object(map) => {
-                if let Some(num_particles) = map.get_mut("num_particles") {
-                    *num_particles = serde_json::Value::Number(serde_json::Number::from(0));
-                    log::info!("Set num_particles to 0");
-                }
-                if let Some(max_particles) = map.get_mut("max_particles") {
-                    *max_particles = serde_json::Value::Number(serde_json::Number::from(0));
-                    log::info!("Set max_particles to 0");
-                }
-                
-                for (_, v) in map.iter_mut() {
-                    process_json_recursive(v);
-                }
-            }
-            serde_json::Value::Array(arr) => {
-                for item in arr.iter_mut() {
-                    process_json_recursive(item);
-                }
-            }
-            _ => {}
-        }
-    }
-    
-    process_json_recursive(&mut json_value);
-    
-    let modified_json = serde_json::to_string(&json_value)?;
-    Ok(modified_json.into_bytes())
-}
-
+// Enhanced clouds detection with more patterns
 fn is_clouds_texture_file(c_path: &Path) -> bool {
     if !is_java_clouds_enabled() {
         return false;
@@ -168,8 +137,22 @@ fn is_clouds_texture_file(c_path: &Path) -> bool {
     
     let path_str = c_path.to_string_lossy();
     
-    path_str.contains("textures/environment/clouds.png") || 
-    path_str.ends_with("textures/environment/clouds.png")
+    let cloud_patterns = [
+        "textures/environment/clouds.png",
+        "/textures/environment/clouds.png",
+        "environment/clouds.png",
+        "/environment/clouds.png",
+        "clouds.png",
+        "textures/clouds.png",
+        "/textures/clouds.png",
+        "resource_packs/vanilla/textures/environment/clouds.png",
+        "assets/resource_packs/vanilla/textures/environment/clouds.png",
+        "vanilla/textures/environment/clouds.png",
+    ];
+    
+    cloud_patterns.iter().any(|pattern| {
+        path_str.contains(pattern) || path_str.ends_with(pattern)
+    })
 }
 
 fn is_skin_file_path(c_path: &Path, filename: &str) -> bool {
@@ -232,6 +215,60 @@ fn is_persona_file_to_block(c_path: &Path) -> bool {
         path_str.contains(persona_path) || path_str.ends_with(persona_path)
     })
 }
+
+// Cape physics helper functions - MOVED OUTSIDE of open() function
+fn is_cape_animation_file(c_path: &Path) -> bool {
+    if !is_cape_physics_enabled() {
+        return false;
+    }
+    
+    let path_str = c_path.to_string_lossy();
+    
+    // Check for cape animation file in various possible locations
+    let cape_animation_paths = [
+        "vanilla_1.20.50/animations/cape.animation.json",
+        "animations/cape.animation.json",
+        "resource_packs/vanilla_1.20.50/animations/cape.animation.json",
+        "assets/resource_packs/vanilla_1.20.50/animations/cape.animation.json",
+        "models/entity/cape.animation.json",
+        "entity/cape.animation.json",
+        "cape.animation.json",
+        "/animations/cape.animation.json",
+        "/models/entity/cape.animation.json",
+        "/entity/cape.animation.json",
+    ];
+    
+    cape_animation_paths.iter().any(|path| {
+        path_str.contains(path) || path_str.ends_with(path)
+    })
+}
+
+fn is_cape_geometry_file(c_path: &Path) -> bool {
+    if !is_cape_physics_enabled() {
+        return false;
+    }
+    
+    let path_str = c_path.to_string_lossy();
+    
+    // Check for cape geometry file in various possible locations
+    let cape_geometry_paths = [
+        "vanilla_1.20.50/models/entity/cape.geo.json",
+        "models/entity/cape.geo.json",
+        "resource_packs/vanilla_1.20.50/models/entity/cape.geo.json",
+        "assets/resource_packs/vanilla_1.20.50/models/entity/cape.geo.json",
+        "entity/cape.geo.json",
+        "cape.geo.json",
+        "/models/entity/cape.geo.json",
+        "/entity/cape.geo.json",
+        "geometry/cape.geo.json",
+        "/geometry/cape.geo.json",
+    ];
+    
+    cape_geometry_paths.iter().any(|path| {
+        path_str.contains(path) || path_str.ends_with(path)
+    })
+}
+
 pub(crate) unsafe fn open(
     man: *mut AAssetManager,
     fname: *const libc::c_char,
@@ -248,6 +285,15 @@ pub(crate) unsafe fn open(
         return aasset;
     };
 
+    // Debug logging for cape physics
+    if is_cape_physics_enabled() {
+        let path_str = c_path.to_string_lossy();
+        if path_str.contains("cape") {
+            log::info!("Cape physics enabled - found cape-related file: {}", c_path.display());
+        }
+    }
+
+    // Block persona files if classic skins enabled
     if is_persona_file_to_block(c_path) {
         log::info!("Blocking persona file due to classic_skins enabled: {}", c_path.display());
         if !aasset.is_null() {
@@ -255,7 +301,17 @@ pub(crate) unsafe fn open(
         }
         return std::ptr::null_mut();
     }
+
+    // Block entire particles folder if particles disabler enabled
+    if is_particles_folder_to_block(c_path) {
+        log::info!("Blocking particles file due to particles_disabler enabled: {}", c_path.display());
+        if !aasset.is_null() {
+            ndk_sys::AAsset_close(aasset);
+        }
+        return std::ptr::null_mut();
+    }
     
+    // Custom splashes
     if os_filename == "splashes.json" {
         log::info!("Intercepting splashes.json with custom content");
         let buffer = CUSTOM_SPLASHES_JSON.as_bytes().to_vec();
@@ -264,6 +320,7 @@ pub(crate) unsafe fn open(
         return aasset;
     }
     
+    // Custom loading messages
     if os_filename == "loading_messages.json" {
         log::info!("Intercepting loading_messages.json with custom content");
         let buffer = CUSTOM_LOADING_MESSAGES_JSON.as_bytes().to_vec();
@@ -272,6 +329,7 @@ pub(crate) unsafe fn open(
         return aasset;
     }
     
+    // Cape physics interception
     if is_cape_animation_file(c_path) {
         log::info!("Intercepting cape animation file with custom cape physics: {}", c_path.display());
         let buffer = CUSTOM_CAPE_ANIMATION_JSON.as_bytes().to_vec();
@@ -288,41 +346,7 @@ pub(crate) unsafe fn open(
         return aasset;
     }
 
-    if is_particle_json_file(c_path) {
-        log::info!("Intercepting particle JSON file: {}", c_path.display());
-        
-        if aasset.is_null() {
-            log::warn!("Failed to open original particle file: {}", c_path.display());
-            return aasset;
-        }
-        
-        let original_size = ndk_sys::AAsset_getLength(aasset) as usize;
-        let mut original_data = vec![0u8; original_size];
-        
-        let bytes_read = ndk_sys::AAsset_read(aasset, original_data.as_mut_ptr() as *mut libc::c_void, original_size);
-        if bytes_read < 0 {
-            log::warn!("Failed to read original particle file: {}", c_path.display());
-            return aasset;
-        }
-        
-        ndk_sys::AAsset_seek(aasset, 0, libc::SEEK_SET);
-        
-        let processed_data = match process_particle_json(&original_data) {
-            Ok(data) => {
-                log::info!("Successfully processed particle JSON: {}", c_path.display());
-                data
-            }
-            Err(e) => {
-                log::warn!("Failed to process particle JSON {}: {}, using empty JSON", c_path.display(), e);
-                "{}".as_bytes().to_vec()
-            }
-        };
-        
-        let mut wanted_lock = WANTED_ASSETS.lock().unwrap();
-        wanted_lock.insert(AAssetPtr(aasset), Cursor::new(processed_data));
-        return aasset;
-    }
-
+    // Java clouds texture replacement
     if is_clouds_texture_file(c_path) {
         log::info!("Intercepting clouds texture with Java clouds texture: {}", c_path.display());
         let buffer = JAVA_CLOUDS_TEXTURE.to_vec();
@@ -331,6 +355,7 @@ pub(crate) unsafe fn open(
         return aasset;
     }
 
+    // Classic skins replacements
     if is_classic_skins_steve_texture_file(c_path) {
         log::info!("Intercepting steve.png with classic Steve texture: {}", c_path.display());
         let buffer = CLASSIC_STEVE_TEXTURE.to_vec();
@@ -355,6 +380,7 @@ pub(crate) unsafe fn open(
         return aasset;
     }
     
+    // No hurt cam camera replacements
     if is_no_hurt_cam_enabled() {
         let path_str = c_path.to_string_lossy();
         
@@ -384,47 +410,8 @@ pub(crate) unsafe fn open(
             }
         }
     }
-    
-fn is_cape_animation_file(c_path: &Path) -> bool {
-    if !is_cape_physics_enabled() {
-        return false;
-    }
-    
-    let path_str = c_path.to_string_lossy();
-    
-    // Check for cape animation file in various possible locations
-    let cape_animation_paths = [
-        "vanilla_1.20.50/animations/cape.animation.json",
-        "animations/cape.animation.json",
-        "resource_packs/vanilla_1.20.50/animations/cape.animation.json",
-        "assets/resource_packs/vanilla_1.20.50/animations/cape.animation.json",
-    ];
-    
-    cape_animation_paths.iter().any(|path| {
-        path_str.contains(path) || path_str.ends_with(path)
-    })
-}
 
-fn is_cape_geometry_file(c_path: &Path) -> bool {
-    if !is_cape_physics_enabled() {
-        return false;
-    }
-    
-    let path_str = c_path.to_string_lossy();
-    
-    // Check for cape geometry file in various possible locations
-    let cape_geometry_paths = [
-        "vanilla_1.20.50/models/entity/cape.geo.json",
-        "models/entity/cape.geo.json",
-        "resource_packs/vanilla_1.20.50/models/entity/cape.geo.json",
-        "assets/resource_packs/vanilla_1.20.50/models/entity/cape.geo.json",
-    ];
-    
-    cape_geometry_paths.iter().any(|path| {
-        path_str.contains(path) || path_str.ends_with(path)
-    })
-}
-
+    // Material replacements
     let filename_str = os_filename.to_string_lossy();
     if let Some(no_fog_data) = get_no_fog_material_data(&filename_str) {
         log::info!("Intercepting {} with no-fog material (no-fog enabled)", filename_str);
@@ -434,7 +421,6 @@ fn is_cape_geometry_file(c_path: &Path) -> bool {
         return aasset;
     }
     
-    let filename_str = os_filename.to_string_lossy();
     if let Some(java_cubemap_data) = get_java_cubemap_material_data(&filename_str) {
         log::info!("Intercepting {} with java-cubemap material (java-cubemap enabled)", filename_str);
         let buffer = java_cubemap_data.to_vec();
@@ -443,6 +429,7 @@ fn is_cape_geometry_file(c_path: &Path) -> bool {
         return aasset;
     }
 
+    // Resource pack loading logic
     let stripped = match c_path.strip_prefix("assets/") {
         Ok(yay) => yay,
         Err(_e) => c_path,
