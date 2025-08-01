@@ -49,31 +49,6 @@ const CLASSIC_ALEX_TEXTURE: &[u8] = include_bytes!("a.png");
 
 const JAVA_CLOUDS_TEXTURE: &[u8] = include_bytes!("Diskksks.png");
 
-// Empty particle file to disable particles
-const EMPTY_PARTICLE_JSON: &str = r#"{
-  "format_version": "1.10.0",
-  "particle_effect": {
-    "description": {
-      "identifier": "minecraft:disabled_particle",
-      "basic_render_parameters": {
-        "material": "particles_alpha",
-        "texture": "textures/particle/particles"
-      }
-    },
-    "components": {
-      "minecraft:emitter_lifetime_once": {
-        "active_time": 0
-      },
-      "minecraft:emitter_rate_instant": {
-        "num_particles": 0
-      },
-      "minecraft:particle_lifetime_expression": {
-        "max_lifetime": 0
-      }
-    }
-  }
-}"#;
-
 fn get_current_mcver(man: ndk::asset::AssetManager) -> Option<MinecraftVersion> {
     let mut file = match get_uitext(man) {
         Some(asset) => asset,
@@ -142,37 +117,35 @@ fn get_java_cubemap_material_data(filename: &str) -> Option<&'static [u8]> {
     }
 }
 
-// Fixed particles disabler - properly intercepts particle files and returns empty content
-fn is_particles_file_to_disable(c_path: &Path) -> bool {
+// Enhanced particles disabler - blocks entire particles folder and all particle-related files
+fn is_particles_folder_to_block(c_path: &Path) -> bool {
     if !is_particles_disabler_enabled() {
         return false;
     }
     
-    let path_str = c_path.to_string_lossy().to_lowercase();
+    let path_str = c_path.to_string_lossy();
     
-    // Check for particle files in various locations
+    // Block any file related to particles
     let particle_patterns = [
-        "particles/",
         "/particles/",
-        ".particle.json",
-        "_particle.json",
-        "particle_effect",
+        "particles/",
+        "/particle/",
+        "particle/",
+        "_particle",
+        "particle_",
+        ".particle.",
+        "particles.",
+        "/effects/",
+        "effects/",
+        "_effect",
+        "effect_",
+        ".effect.",
+        "effects.",
     ];
     
-    // Also check specific particle file extensions and names
-    let is_particle_file = particle_patterns.iter().any(|pattern| {
+    particle_patterns.iter().any(|pattern| {
         path_str.contains(pattern)
-    }) || path_str.ends_with(".json") && (
-        path_str.contains("particle") || 
-        path_str.contains("effect") ||
-        path_str.contains("emitter")
-    );
-    
-    if is_particle_file {
-        log::debug!("Detected particle file to disable: {}", c_path.display());
-    }
-    
-    is_particle_file
+    }) || path_str.starts_with("particles") || path_str.ends_with(".particle") || path_str.ends_with("_particle.json")
 }
 
 // Enhanced clouds detection with more patterns
@@ -262,7 +235,7 @@ fn is_persona_file_to_block(c_path: &Path) -> bool {
     })
 }
 
-// Enhanced cape physics helper functions - matches exact vanilla paths and creates virtual files
+// Cape physics helper functions - FIXED to create files when they don't exist
 fn is_cape_animation_file(c_path: &Path) -> bool {
     if !is_cape_physics_enabled() {
         return false;
@@ -270,23 +243,14 @@ fn is_cape_animation_file(c_path: &Path) -> bool {
     
     let path_str = c_path.to_string_lossy();
     
-    // Check for cape animation file in the exact vanilla location
+    // Check for exact cape animation paths that we want to intercept/create
     let cape_animation_paths = [
-        "resource_packs/vanilla_1.20.50/animations/cape.animation.json",
-        "assets/resource_packs/vanilla_1.20.50/animations/cape.animation.json",
         "vanilla_1.20.50/animations/cape.animation.json",
-        "animations/cape.animation.json",
     ];
     
-    let matches = cape_animation_paths.iter().any(|path| {
+    cape_animation_paths.iter().any(|path| {
         path_str.contains(path) || path_str.ends_with(path)
-    });
-    
-    if matches {
-        log::info!("Cape physics: Intercepting cape animation file at: {}", c_path.display());
-    }
-    
-    matches
+    })
 }
 
 fn is_cape_geometry_file(c_path: &Path) -> bool {
@@ -296,23 +260,14 @@ fn is_cape_geometry_file(c_path: &Path) -> bool {
     
     let path_str = c_path.to_string_lossy();
     
-    // Check for cape geometry file in the exact vanilla location
+    // Check for exact cape geometry paths that we want to intercept/create
     let cape_geometry_paths = [
-        "resource_packs/vanilla_1.20.50/models/entity/cape.geo.json",
-        "assets/resource_packs/vanilla_1.20.50/models/entity/cape.geo.json", 
         "vanilla_1.20.50/models/entity/cape.geo.json",
-        "models/entity/cape.geo.json",
     ];
     
-    let matches = cape_geometry_paths.iter().any(|path| {
+    cape_geometry_paths.iter().any(|path| {
         path_str.contains(path) || path_str.ends_with(path)
-    });
-    
-    if matches {
-        log::info!("Cape physics: Intercepting cape geometry file at: {}", c_path.display());
-    }
-    
-    matches
+    })
 }
 
 fn is_cape_content_file(c_path: &Path) -> bool {
@@ -322,23 +277,14 @@ fn is_cape_content_file(c_path: &Path) -> bool {
     
     let path_str = c_path.to_string_lossy();
     
-    // Check for cape content file in the exact vanilla location
-    let cape_content_paths = [
-        "resource_packs/vanilla_1.20.50/contents.json",
-        "assets/resource_packs/vanilla_1.20.50/contents.json",
+    // Check for exact cape geometry paths that we want to intercept/create
+    let cape_geometry_paths = [
         "vanilla_1.20.50/contents.json",
-        "contents.json",
     ];
     
-    let matches = cape_content_paths.iter().any(|path| {
+    cape_geometry_paths.iter().any(|path| {
         path_str.contains(path) || path_str.ends_with(path)
-    });
-    
-    if matches {
-        log::info!("Cape physics: Intercepting cape content file at: {}", c_path.display());
-    }
-    
-    matches
+    })
 }
 
 pub(crate) unsafe fn open(
@@ -357,33 +303,33 @@ pub(crate) unsafe fn open(
         return aasset;
     };
 
-    // Debug logging for enabled features
+    // Debug logging for features
     if is_cape_physics_enabled() {
         let path_str = c_path.to_string_lossy();
-        if path_str.contains("cape") || path_str.contains("vanilla_1.20.50") {
-            log::debug!("Cape physics enabled - checking file: {}", c_path.display());
+        if path_str.contains("cape") || path_str.contains("animation") || path_str.contains("entity") {
+            log::info!("Cape physics enabled - checking file: {}", c_path.display());
         }
     }
     
     if is_particles_disabler_enabled() {
         let path_str = c_path.to_string_lossy();
-        if path_str.contains("particle") {
-            log::debug!("Particles disabler enabled - checking file: {}", c_path.display());
+        if path_str.contains("particle") || path_str.contains("effect") {
+            log::info!("Particles disabler enabled - checking file: {}", c_path.display());
         }
-    }
-
-    // PARTICLES DISABLER - Intercept and replace particle files with empty content
-    if is_particles_file_to_disable(c_path) {
-        log::info!("Particles disabler: Replacing particle file with empty content: {}", c_path.display());
-        let buffer = EMPTY_PARTICLE_JSON.as_bytes().to_vec();
-        let mut wanted_lock = WANTED_ASSETS.lock().unwrap();
-        wanted_lock.insert(AAssetPtr(aasset), Cursor::new(buffer));
-        return aasset;
     }
 
     // Block persona files if classic skins enabled
     if is_persona_file_to_block(c_path) {
         log::info!("Blocking persona file due to classic_skins enabled: {}", c_path.display());
+        if !aasset.is_null() {
+            ndk_sys::AAsset_close(aasset);
+        }
+        return std::ptr::null_mut();
+    }
+
+    // Block entire particles folder if particles disabler enabled
+    if is_particles_folder_to_block(c_path) {
+        log::info!("Blocking particles file due to particles_disabler enabled: {}", c_path.display());
         if !aasset.is_null() {
             ndk_sys::AAsset_close(aasset);
         }
@@ -408,29 +354,53 @@ pub(crate) unsafe fn open(
         return aasset;
     }
     
-    // CAPE PHYSICS - Intercept and create virtual cape files
+    // Cape physics interception - WORKS EVEN IF FILE DOESN'T EXIST
     if is_cape_animation_file(c_path) {
-        log::info!("Cape physics: Creating virtual cape animation file: {}", c_path.display());
+        log::info!("Cape physics: Creating/intercepting cape animation file: {}", c_path.display());
+        
+        // Close the original asset if it exists (might be null if file doesn't exist)
+        if !aasset.is_null() {
+            ndk_sys::AAsset_close(aasset);
+        }
+        
+        // Create a new fake asset
+        let fake_aasset = std::ptr::NonNull::dangling().as_ptr() as *mut ndk_sys::AAsset;
         let buffer = CUSTOM_CAPE_ANIMATION_JSON.as_bytes().to_vec();
         let mut wanted_lock = WANTED_ASSETS.lock().unwrap();
-        wanted_lock.insert(AAssetPtr(aasset), Cursor::new(buffer));
-        return aasset;
+        wanted_lock.insert(AAssetPtr(fake_aasset), Cursor::new(buffer));
+        return fake_aasset;
     }
     
     if is_cape_geometry_file(c_path) {
-        log::info!("Cape physics: Creating virtual cape geometry file: {}", c_path.display());
+        log::info!("Cape physics: Creating/intercepting cape geometry file: {}", c_path.display());
+        
+        // Close the original asset if it exists (might be null if file doesn't exist)
+        if !aasset.is_null() {
+            ndk_sys::AAsset_close(aasset);
+        }
+        
+        // Create a new fake asset
+        let fake_aasset = std::ptr::NonNull::dangling().as_ptr() as *mut ndk_sys::AAsset;
         let buffer = CUSTOM_CAPE_GEOMETRY_JSON.as_bytes().to_vec();
         let mut wanted_lock = WANTED_ASSETS.lock().unwrap();
-        wanted_lock.insert(AAssetPtr(aasset), Cursor::new(buffer));
-        return aasset;
+        wanted_lock.insert(AAssetPtr(fake_aasset), Cursor::new(buffer));
+        return fake_aasset;
     }
     
     if is_cape_content_file(c_path) {
-        log::info!("Cape physics: Creating virtual cape content file: {}", c_path.display());
+        log::info!("Cape physics: Creating/intercepting cape content file: {}", c_path.display());
+        
+        // Close the original asset if it exists (might be null if file doesn't exist)
+        if !aasset.is_null() {
+            ndk_sys::AAsset_close(aasset);
+        }
+        
+        // Create a new fake asset
+        let fake_aasset = std::ptr::NonNull::dangling().as_ptr() as *mut ndk_sys::AAsset;
         let buffer = CUSTOM_CAPE_CONTENT_JSON.as_bytes().to_vec();
         let mut wanted_lock = WANTED_ASSETS.lock().unwrap();
-        wanted_lock.insert(AAssetPtr(aasset), Cursor::new(buffer));
-        return aasset;
+        wanted_lock.insert(AAssetPtr(fake_aasset), Cursor::new(buffer));
+        return fake_aasset;
     }
 
     // Java clouds texture replacement
@@ -527,7 +497,6 @@ pub(crate) unsafe fn open(
         apk: "skin_packs/persona/" -> pack: "persona/",
         apk: "renderer/" -> pack: "renderer/",
         apk: "resource_packs/vanilla/cameras/" -> pack: "vanilla_cameras/",
-        apk: "resource_packs/vanilla_1.20.50/" -> pack: "vanilla_1.20.50/",
     };
     
     for replacement in replacement_list {
