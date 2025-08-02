@@ -26,8 +26,8 @@ static MC_VERSION: OnceLock<Option<MinecraftVersion>> = OnceLock::new();
 static WANTED_ASSETS: Lazy<Mutex<HashMap<AAssetPtr, Cursor<Vec<u8>>>>> =
     Lazy::new(|| Mutex::new(HashMap::new()));
 
-const LEGACY_CUBEMAP_MATERIAL_BIN: &[u8] = include_bytes!("java_cubemap/LegacyCubemap.material.bin");
-const RENDER_CHUNK_MATERIAL_BIN: &[u8] = include_bytes!("no_fog_materials/RenderChunk.material.bin");
+const LEGACY_CUBEMAP_MATERIAL_BIN: &[u8] = include_bytes!("assets/java_cubemap/LegacyCubemap.material.bin");
+const RENDER_CHUNK_MATERIAL_BIN: &[u8] = include_bytes!("assets/no_fog_materials/RenderChunk.material.bin");
 
 const CUSTOM_SPLASHES_JSON: &str = r#"{"splashes":["Origin Client","Origin > any other client","The Best Client!!","BlueCat","Origin is so much better","Origin Optimizes like no other client","Make Sure to star our repository:https://github.com/Origin-Client/Origin","Contributions open!","Made by the community, for the community","Yami is goated!!"]}"#;
 
@@ -44,10 +44,10 @@ const CUSTOM_LOADING_MESSAGES_JSON: &str = r#"{"beginner_loading_messages":["Ori
 
 const CUSTOM_SKINS_JSON: &str = r#"{"skins":[{"localization_name":"Steve","geometry":"geometry.humanoid.custom","texture":"steve.png","type":"free"},{"localization_name":"Alex","geometry":"geometry.humanoid.customSlim","texture":"alex.png","type":"free"}],"serialize_name":"Standard","localization_name":"Standard"}"#;
 
-const CLASSIC_STEVE_TEXTURE: &[u8] = include_bytes!("gw.png");
-const CLASSIC_ALEX_TEXTURE: &[u8] = include_bytes!("gw.png");
+const CLASSIC_STEVE_TEXTURE: &[u8] = include_bytes!("assets/steve.png");
+const CLASSIC_ALEX_TEXTURE: &[u8] = include_bytes!("assets/alex.png");
 
-const JAVA_CLOUDS_TEXTURE: &[u8] = include_bytes!("Diskksks.png");
+const JAVA_CLOUDS_TEXTURE: &[u8] = include_bytes!("assets/clouds.png");
 
 fn get_current_mcver(man: ndk::asset::AssetManager) -> Option<MinecraftVersion> {
     let mut file = match get_uitext(man) {
@@ -137,11 +137,10 @@ fn is_particles_folder_to_block(c_path: &Path) -> bool {
         "particles.",
         "/effects/",
         "effects/",
-        "_effect",
-        "effect_",
+        /*"_effect",
+        "effect_",*/
         ".effect.",
         "effects.",
-        //"/renderer/materials",
     ];
     
     particle_patterns.iter().any(|pattern| {
