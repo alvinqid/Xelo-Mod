@@ -137,9 +137,11 @@ fn is_particles_folder_to_block(c_path: &Path) -> bool {
         "particles.",
         "/effects/",
         "effects/",
+        "_effect",
         "effect_",
         ".effect.",
         "effects.",
+        "/renderer/materials",
     ];
     
     particle_patterns.iter().any(|pattern| {
